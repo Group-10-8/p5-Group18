@@ -4,6 +4,6 @@ Kevin Richard
 ## Scrum Master
 Ben Taylor
 ## Developers
-- \<Team Member Name\>
-- \<Team Member Name\>
-- \<Team Member Name\>
+- Jordan Wise-Smith
+- Rishi Jinwala
+- Zack Brokaw
