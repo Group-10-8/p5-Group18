@@ -2,7 +2,7 @@
 ## Product Owner
 Kevin Richard
 ## Scrum Master
-\<Team Member Name\>
+Ben Taylor
 ## Developers
 - \<Team Member Name\>
 - \<Team Member Name\>
