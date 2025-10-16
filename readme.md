@@ -2,7 +2,7 @@
 ## Product Owner
 Kevin Richard
 ## Scrum Master
-Ben Taylor
+Benjamin Taylor
 ## Developers
 - Jordan Wise-Smith
 - Rishi Jinwala
