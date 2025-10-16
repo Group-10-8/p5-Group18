@@ -1,6 +1,6 @@
-# \<Project Name\> Scrum Team
+# Photo App Scrum Team
 ## Product Owner
-\<Team Member Name\>
+Kevin Richard
 ## Scrum Master
 \<Team Member Name\>
 ## Developers
