@@ -50,7 +50,7 @@ class TopBar extends React.Component {
       <AppBar className="topbar-appBar" position="absolute">
         <Toolbar>
           <Typography variant="h5" color="inherit" className='topbar-name'>
-            Group 18
+            Group 18: Ben Taylor, Jordan Wise-Smith, Zack Brokaw, Kevin Richard, Rishi Jinwala
           </Typography>
           <Typography variant="h5" color="inherit">
             {this.props.context || "No data available"}
