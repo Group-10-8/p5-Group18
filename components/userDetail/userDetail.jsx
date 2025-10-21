@@ -13,6 +13,13 @@ class UserDetail extends React.Component {
     super(props);
   }
 
+  componentDidMount() {
+    const { userId } = this.props.match.params;
+    fetchModel(`/user/${userId}`)
+      .then(({ data }) => this.setState({ user: data, error: null }))
+      .catch((err) => this.setState({ user: null, error: err }));
+  }
+
   render() {
     return (
       <Typography variant="body1">

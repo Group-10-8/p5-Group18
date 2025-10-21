@@ -14,6 +14,13 @@ class UserPhotos extends React.Component {
 
   }
 
+  componentDidMount() {
+    const { userId } = this.props.match.params;
+    fetchModel(`/photosOfUser/${userId}`)
+      .then(({ data }) => this.setState({ photos: data || [], error: null }))
+      .catch((err) => this.setState({ photos: [], error: err }));
+  }
+
   render() {
     return (
       <Typography variant="body1">

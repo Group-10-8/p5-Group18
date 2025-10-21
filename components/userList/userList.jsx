@@ -17,6 +17,12 @@ class UserList extends React.Component {
     super(props);
   }
 
+  componentDidMount() {
+    fetchModel('/user/list')
+      .then(({ data }) => this.setState({ users: data || [] }))
+      .catch(() => this.setState({ users: [] }));
+  }
+
   render() {
     return (
       <div>
