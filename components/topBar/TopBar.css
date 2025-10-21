@@ -1,4 +1,8 @@
 .topbar-appBar {
-  height: 60;
+  height: 60px;
   justify-content: 'center';
+}
+
+.topbar-name {
+  flex-grow: 1;
 }

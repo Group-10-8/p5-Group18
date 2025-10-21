@@ -49,7 +49,7 @@ class TopBar extends React.Component {
     return (
       <AppBar className="topbar-appBar" position="absolute">
         <Toolbar>
-          <Typography variant="h5" color="inherit"  style={{ flexGrow: 1 }}>
+          <Typography variant="h5" color="inherit" className='topbar-name'>
             Group 18
           </Typography>
           <Typography variant="h5" color="inherit">
