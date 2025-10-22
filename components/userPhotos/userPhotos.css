@@ -1,0 +1,24 @@
+.user-photos-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.photo-card {
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.photo-img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.comment-block {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid #ccc;
+}
