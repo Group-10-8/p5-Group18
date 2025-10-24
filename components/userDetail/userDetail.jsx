@@ -27,7 +27,7 @@ class UserDetail extends React.Component {
         it is invoked from React Router the params from the route will be
         in property match. So this should show details of user:
         {this.props.match.params.userId}. You can fetch the model for the
-        user from window.models.userModel(userId).
+        user from window.models.userModel(userId). connect to others and get access from above info.
       </Typography>
     );
   }
