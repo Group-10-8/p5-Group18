@@ -37,7 +37,7 @@ class UserDetail extends React.Component {
         
         <p> <b>Occupation:</b> {user.occupation} </p>
         
-        <p><b>Description:</b> {user.description}</p>
+        <p> <b>Description:</b> {user.description }</p>
         <p>
           <a href={`#/photos/${user._id}`}>
             View Photos of {user.first_name}
