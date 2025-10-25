@@ -1,59 +1,53 @@
 import React from 'react';
-import {
-  AppBar, Toolbar, Typography
-} from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { AppBar, Toolbar, Typography } from '@mui/material';
 import './TopBar.css';
-import '../../lib/fetchModelData'
+import fetchModel from '../../lib/fetchModelData';
 
 /**
- * TopBar function to provide app context
- */
-function TopBarWrapper() {
-  const location = useLocation();
-  const path = location.pathname;
-
-  let context = "";
-
-  const userMatch = path.match(/^\/users\/([^/]+)$/);
-  const photosMatch = path.match(/^\/photos\/([^/]+)$/);
-
-  let user = null;
-
-  if (userMatch) {
-    const userId = userMatch[1];
-    user = window.models.userModel(userId);
-    if (user) {
-      context = `${user.first_name} ${user.last_name}`;
-    }
-  } else if (photosMatch) {
-    const userId = photosMatch[1];
-    user = window.models.userModel(userId);
-    if (user) {
-      context = `Photos of ${user.first_name} ${user.last_name}`;
-    }
-  }
-
-  return context ? <TopBar context={context} /> : <Typography>No data available</Typography>;
-}
-
-/**
- * Define TopBar, a React componment of project #5
+ * Define TopBar, a React component for project #5
  */
 class TopBar extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      user: null,
+      error: null,
+    };
+  }
+  componentDidMount() {
+    this.fetchUserData();
+    window.onhashchange = this.fetchUserData;
   }
 
+  componentWillUnmount() {
+    window.onhashchange = null;
+  }
+
+  // Function to fetch user data
+  fetchUserData = () => {
+    const hash = window.location.hash;
+    const userId = hash.split('/')[2];
+
+    fetchModel(`/user/${userId}`)
+      .then(({ data }) => {
+        this.setState({ user: data, error: null });
+      })
+      .catch((err) => {
+        this.setState({ user: null, error: 'Error loading user data' });
+      });
+  };
+
   render() {
+    const { user } = this.state;
+
     return (
       <AppBar className="topbar-appBar" position="absolute">
         <Toolbar>
-          <Typography variant="h5" color="inherit" className='topbar-name'>
-            Group 18: Ben Taylor, Jordan Wise-Smith, Zack Brokaw, Kevin Richard, Rishi Jinwala
+          <Typography variant="h5" color="inherit" className="topbar-name">
+            Group 18: Benjamin Taylor, Jordan Wise-Smith, Zack Brokaw, Kevin Richard, Rishi Jinwala
           </Typography>
           <Typography variant="h5" color="inherit">
-            {this.props.context || "No data available"}
+            {user ? `${user.first_name} ${user.last_name}` : 'No data available'}
           </Typography>
         </Toolbar>
       </AppBar>
