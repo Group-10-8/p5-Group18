@@ -9,6 +9,7 @@ import {
 from '@mui/material';
 import './userList.css';
 import { Link } from 'react-router-dom';
+import fetchModel from '../../lib/fetchModelData';
 
 /**
  * Define UserList, a React component of project #5
