@@ -3,7 +3,7 @@ import {
   Typography
 } from '@mui/material';
 import './userPhotos.css';
-
+import fetchModel from '../../lib/fetchModelData';
 
 /**
  * Define UserPhotos, a React componment of project #5
