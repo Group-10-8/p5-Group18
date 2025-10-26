@@ -1,6 +1,6 @@
 .user-photos-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding: 16px;
 }
@@ -17,15 +17,8 @@
   margin-bottom: 8px;
 }
 
-.comment-block {
+.comments-container {
   margin-top: 8px;
   padding-left: 12px;
   border-left: 2px solid #ccc;
-}
-
-.dev-json {
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow: auto;
-  max-width: 100%;
 }
