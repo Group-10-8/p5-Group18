@@ -22,3 +22,10 @@
   padding-left: 12px;
   border-left: 2px solid #ccc;
 }
+
+.dev-json {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+  max-width: 100%;
+}
