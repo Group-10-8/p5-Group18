@@ -2,7 +2,7 @@ import React from 'react';
 import { Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import './userDetail.css';
-import fetchModel from '../../lib/fetchModelData';
+import axios from 'axios';
 
 /**
  * Define UserDetail, a React component of project #5
@@ -24,7 +24,7 @@ class UserDetail extends React.Component {
 
   loadUser = () => {
     const { userId } = this.props.match.params;
-    fetchModel(`/user/${userId}`)
+    axios.get(`/user/${userId}`)
       .then(({ data }) => this.setState({ user: data, error: null }))
       .catch((err) => this.setState({ user: null, error: err }));
   };

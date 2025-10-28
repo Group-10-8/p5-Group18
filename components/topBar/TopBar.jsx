@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography } from '@mui/material';
 import './TopBar.css';
-import fetchModel from '../../lib/fetchModelData';
+import axios from 'axios';
 
 /**
  * Define TopBar, a React component for project #5
@@ -28,7 +28,7 @@ class TopBar extends React.Component {
     const hash = window.location.hash;
     const userId = hash.split('/')[2];
 
-    fetchModel(`/user/${userId}`)
+    axios.get(`/user/${userId}`)
       .then(({ data }) => {
         this.setState({ user: data, error: null });
       })

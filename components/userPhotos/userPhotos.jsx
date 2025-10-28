@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography } from '@mui/material';
 import './userPhotos.css';
-import fetchModel from '../../lib/fetchModelData';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 /**
@@ -16,7 +16,7 @@ class UserPhotos extends React.Component {
 
   componentDidMount() {
     const { userId } = this.props.match.params;
-    fetchModel(`/photosOfUser/${userId}`)
+    axios.get(`/photosOfUser/${userId}`)
       .then(({ data }) => this.setState({ photos: data || [], error: null }))
       .catch((err) => this.setState({ photos: [], error: err }));
   }
@@ -24,7 +24,7 @@ class UserPhotos extends React.Component {
   componentDidUpdate(prevProps) {
     if (prevProps.match.params.userId !== this.props.match.params.userId) {
       const { userId } = this.props.match.params;
-      fetchModel(`/photosOfUser/${userId}`)
+      axios.get(`/photosOfUser/${userId}`)
         .then(({ data }) => this.setState({ photos: data || [], error: null }))
         .catch((err) => this.setState({ photos: [], error: err }));
     }

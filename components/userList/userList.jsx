@@ -9,7 +9,7 @@ import {
 from '@mui/material';
 import './userList.css';
 import { Link } from 'react-router-dom';
-import fetchModel from '../../lib/fetchModelData';
+import axios from 'axios';
 
 /**
  * Define UserList, a React component of project #5
@@ -25,7 +25,7 @@ class UserList extends React.Component {
   }
 
   componentDidMount() {
-    fetchModel('/user/list')
+    axios.get('/user/list')
       .then(({ data }) =>
         this.setState({
           users: data || [],
@@ -76,7 +76,7 @@ class UserList extends React.Component {
         </List>
 
         <Typography variant="body1">
-          The model now comes from <code>/user/list</code> using fetchModel.
+          The model now comes from <code>/user/list</code> using axios.
         </Typography>
       </div>
     );
