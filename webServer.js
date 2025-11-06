@@ -158,13 +158,11 @@ app.get('/user/list', async function (req, res) {
  */
 app.get("/user/:id", async function (request, response) {
   const id = request.params.id;
-  //const user = models.userModel(id);
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     response.status(400).send({ message: "Invalid user id format." });
     return;
   }
-
-  //const user = await User.findById(id, '_id first_name last_name location description occupation').lean();
   
   try {
     const user = await User.findById(
@@ -182,14 +180,6 @@ app.get("/user/:id", async function (request, response) {
     response.status(500).send({ message: "Internal server error." });
   }
 });
-
-//   if (user === null) {
-//     console.log("User with _id:" + id + " not found.");
-//     response.status(400).send({message: "HTTP status"});
-//     return;
-//   }
-//   response.status(200).send(user);
-// });
 
 /**
  * URL /photosOfUser/:id - Returns the Photos for User (id).
