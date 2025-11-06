@@ -24,7 +24,7 @@ class UserDetail extends React.Component {
 
   loadUser = () => {
     const { userId } = this.props.match.params;
-    axios.get(`/users/${userId}`)
+    axios.get(`/user/${userId}`)
       .then(({ data }) => this.setState({ user: data, error: null }))
       .catch((err) => this.setState({ user: null, error: err }));
   };
