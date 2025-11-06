@@ -156,16 +156,40 @@ app.get('/user/list', async function (req, res) {
 /**
  * URL /user/:id - Returns the information for User (id).
  */
-app.get("/user/:id", function (request, response) {
+app.get("/user/:id", async function (request, response) {
   const id = request.params.id;
-  const user = models.userModel(id);
-  if (user === null) {
-    console.log("User with _id:" + id + " not found.");
-    response.status(400).send("Not found");
+  //const user = models.userModel(id);
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    response.status(400).send({ message: "Invalid user id format." });
     return;
   }
-  response.status(200).send(user);
+
+  //const user = await User.findById(id, '_id first_name last_name location description occupation').lean();
+  
+  try {
+    const user = await User.findById(
+      id,
+      "_id first_name last_name location description occupation"
+    ).lean();
+    if (!user) {
+      console.log("User with _id:" + id + " not found.");
+      response.status(400).send({ message: "User not found." });
+      return;
+    }
+    response.status(200).send(user);
+  } catch (err) {
+    console.error("Error in /user/:id:", err);
+    response.status(500).send({ message: "Internal server error." });
+  }
 });
+
+//   if (user === null) {
+//     console.log("User with _id:" + id + " not found.");
+//     response.status(400).send({message: "HTTP status"});
+//     return;
+//   }
+//   response.status(200).send(user);
+// });
 
 /**
  * URL /photosOfUser/:id - Returns the Photos for User (id).
