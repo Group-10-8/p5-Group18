@@ -186,13 +186,57 @@ app.get("/user/:id", async function (request, response) {
  */
 app.get("/photosOfUser/:id", function (request, response) {
   const id = request.params.id;
-  const photos = models.photoOfUserModel(id);
-  if (photos.length === 0) {
-    console.log("Photos for user with _id:" + id + " not found.");
-    response.status(400).send("Not found");
-    return;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return response.status(400).send("Invalid user id.");
   }
-  response.status(200).send(photos);
+
+  async.waterfall(
+    [
+      function (cb) {
+        User.findById(id).select("_id").lean().exec((err, user) => {
+          if (err) return cb(err);
+          if (!user) return cb({ http: 400, msg: "User not found." });
+          cb(null);
+        });
+      },
+      function (cb) {
+        Photo.find({ user_id: id })
+          .select("_id user_id file_name date_time comments")
+          .lean()
+          .exec(cb);
+      },
+      function (photos, cb) {
+        async.map(
+          photos,
+          function (photo, mcb) {
+            const shaped = {
+              _id: photo._id,
+              user_id: photo.user_id,
+              file_name: photo.file_name,
+              date_time: photo.date_time,
+              comments: (photo.comments || []).map((c) => ({
+                _id: c._id,
+                comment: c.comment,
+                date_time: c.date_time,
+                user_id: c.user_id
+              }))
+            };
+            mcb(null, shaped);
+          },
+          cb
+        );
+      }
+    ],
+    function (err, result) {
+      if (err) {
+        if (err.http === 400) return response.status(400).send(err.msg);
+        console.error("Error in /photosOfUser/:id:", err);
+        return response.status(500).send("Internal server error.");
+      }
+      response.status(200).send(result);
+    }
+  );
 });
 
 const server = app.listen(3000, function () {
