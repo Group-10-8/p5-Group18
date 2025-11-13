@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Divider } from '@mui/material';
+import { Button, Typography, Divider, Modal, Box } from '@mui/material';
 import './userPhotos.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -11,7 +11,12 @@ import { Link } from 'react-router-dom';
 class UserPhotos extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { photos: [], error: null, loading: true };
+    this.state = { 
+      photos: [], 
+      error: null, 
+      loading: true,
+      modalOpen: false
+     };
   }
 
   fetchPhotos = (userId) => {
@@ -44,6 +49,14 @@ class UserPhotos extends React.Component {
     } catch {
       return dateString;
     }
+  }
+
+  handleOpen = () => {
+    this.setState({ modalOpen: true})
+  }
+
+  handleClose = () => {
+    this.setState({ modalOpen: false})
   }
 
   render() {
@@ -82,9 +95,30 @@ class UserPhotos extends React.Component {
             {photo.comments && photo.comments.length > 0 && (
               <div className="comments-container">
                 <Divider sx={{ my: 1 }} />
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Comments
-                </Typography>
+                <div className="comments-header">
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Comments
+                  </Typography>
+                  <Button onClick={this.handleOpen}>Add Comment</Button>
+                </div>
+                {this.state.modalOpen && (
+                  <div className="modal-overlay" onClick={this.handleClose} />
+                )}
+                {this.state.modalOpen && (
+                  <div className="modal-container">
+                    <Typography variant="h6" component="h2">
+                      Add Comment
+                    </Typography>
+                    <Typography sx={{ mt: 2 }}>
+                      Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+                    </Typography>
+
+                    {/* Close button */}
+                    <span className="modal-close-btn" onClick={this.handleClose}>
+                      &times;
+                    </span>
+                  </div>
+                )}
                 {photo.comments.map((comment) => (
                   <div key={comment._id} className="comment-card">
                     <Typography variant="body2">
