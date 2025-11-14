@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Typography, Divider, Modal, Box } from '@mui/material';
+import { Button, Typography, Divider, TextField } from '@mui/material';
 import './userPhotos.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -110,10 +110,8 @@ class UserPhotos extends React.Component {
                       Add Comment
                     </Typography>
                     <Typography sx={{ mt: 2 }}>
-                      Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+                      <TextField className='modal-textfield' placeholder="Add your comment here" multiline={true}></TextField>
                     </Typography>
-
-                    {/* Close button */}
                     <span className="modal-close-btn" onClick={this.handleClose}>
                       &times;
                     </span>
