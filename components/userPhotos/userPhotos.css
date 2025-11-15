@@ -82,6 +82,11 @@
   max-height: 800px;
 }
 
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+}
+
 .modal-textfield {
   width: 100%;
   height: 200px;

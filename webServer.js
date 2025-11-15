@@ -236,6 +236,32 @@ app.get("/photosOfUser/:id", async function (request, response) {
   }
 });
 
+app.post("commentsOfPhoto/:photoId", express.json(), async function (request, response) {
+  const photoId = request.params.photoId;
+  const { userId, comment } = request.body;
+
+  if (!mongoose.Types.ObjectId.isValid(photoId) || !mongoose.Types.ObjectId.isValid(userId)) {
+    return response.status(400).send("Invalid photo id or user id.");
+  }
+  try {
+    const photo = await Photo.findById(photoId);
+    if (!photo) {
+      return response.status(400).send("Photo not found.");
+    }
+    const newComment = {
+      user_id: userId,
+      comment: comment,
+      date_time: new Date(),
+    };
+    photo.comments.push(newComment);
+    await photo.save();
+    response.status(200).send("Comment added successfully.");
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    return response.status(500).send("Internal server error.");
+  }
+});
+
 const server = app.listen(3000, function () {
   const port = server.address().port;
   console.log(
