@@ -44,6 +44,10 @@ const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
 const SchemaInfo = require("./schema/schemaInfo.js");
 
+const session = require("express-session");
+const bodyParser = require("body-parser");
+app.use(bodyParser.json());
+
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
 // const models = require("./modelData/photoApp.js").models;
@@ -137,6 +141,54 @@ app.get("/test/:p1", function (request, response) {
     // status.
     response.status(400).send("Bad param " + param);
   }
+});
+
+app.use((req, res, next) => {
+  if (req.path === "/admin/login" || req.path === "/admin/logout") {
+    return next();
+  }
+
+  if (req.path === "/user" && req.method === "POST") {
+    return next(); 
+  }
+
+  if (!req.session.user_id) {
+    return res.status(401).send("Not logged in");
+  }
+
+  next();
+});
+
+app.post("/admin/login", async (req, res) => {
+  const { login_name, password } = req.body;
+
+  if (!login_name || !password) {
+    return res.status(400).send("Missing login_name or password");
+  }
+
+  const user = await User.findOne({ login_name }).lean();
+
+  if (!user || user.password !== password) {
+    return res.status(400).send("Invalid login");
+  }
+
+  req.session.user_id = user._id;
+
+  res.status(200).send({
+    _id: user._id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+  });
+});
+
+app.post("/admin/logout", (req, res) => {
+  if (!req.session.user_id) {
+    return res.status(400).send("Not logged in");
+  }
+
+  req.session.destroy(() => {
+    res.status(200).send("Logged out");
+  });
 });
 
 /**
@@ -236,9 +288,10 @@ app.get("/photosOfUser/:id", async function (request, response) {
   }
 });
 
-app.post("commentsOfPhoto/:photoId", express.json(), async function (request, response) {
+app.post("/commentsOfPhoto/:photoId", express.json(), async function (request, response) {
   const photoId = request.params.photoId;
-  const { userId, comment } = request.body;
+  const userId = request.session.user_id;
+  const { comment } = request.body;
 
   if (!mongoose.Types.ObjectId.isValid(photoId) || !mongoose.Types.ObjectId.isValid(userId)) {
     return response.status(400).send("Invalid photo id or user id.");
@@ -261,6 +314,47 @@ app.post("commentsOfPhoto/:photoId", express.json(), async function (request, re
     return response.status(500).send("Internal server error.");
   }
 });
+
+app.post("/user", async (req, res) => {
+  const {
+    login_name,
+    password,
+    first_name,
+    last_name,
+    location,
+    description,
+    occupation,
+  } = req.body;
+
+  if (!login_name || !password || !first_name || !last_name) {
+    return res.status(400).send("Missing required fields");
+  }
+
+  const existing = await User.findOne({ login_name });
+  if (existing) {
+    return res.status(400).send("Login name already exists");
+  }
+
+  try {
+    const newUser = new User({
+      login_name,
+      password,
+      first_name,
+      last_name,
+      location,
+      description,
+      occupation,
+    });
+
+    await newUser.save();
+
+    res.status(200).send("User registered successfully");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error creating user");
+  }
+});
+
 
 const server = app.listen(3000, function () {
   const port = server.address().port;
