@@ -1,7 +1,3 @@
-"use strict";
-
-const mongoose = require("mongoose");
-
 /**
  * Define the Mongoose Schema for a Comment.
  */

@@ -65,7 +65,6 @@ class UserPhotos extends React.Component {
     const { selectedPhotoId, newComment } = this.state;
 
     axios.post(`/commentsOfPhoto/${selectedPhotoId}`, {
-      userId: this.props.currentUser._id,
       comment: newComment
     })
     .then(() => {
