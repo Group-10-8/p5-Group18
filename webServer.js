@@ -159,6 +159,10 @@ app.use((req, res, next) => {
   next();
 });
 
+/*
+Login/Logout and scheme update part 
+*/
+
 app.post("/admin/login", async (req, res) => {
   const { login_name, password } = req.body;
 
