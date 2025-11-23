@@ -6,7 +6,7 @@ import './styles/main.css';
 
 import TopBar from './components/topBar/TopBar';
 import UserDetail from './components/UserDetail/UserDetail';
-import UserList from './components/UserList/UserList';
+import UserList from './components/userList/userList';
 import UserPhotos from './components/UserPhotos/UserPhotos';
 import LoginRegister from './components/LoginRegister/LoginRegister';
 
@@ -23,8 +23,13 @@ class PhotoShare extends React.Component {
   };
 
   handleLogout = () => {
-    this.setState({ currentUser: null });
+    axios.post('/admin/logout')
+      .then(() => {
+        this.setState({ currentUser: null });
+      })
+      .catch(err => console.error(err));
   };
+
 
   render() {
     const { currentUser } = this.state;

@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  Button, Box, TextField, Alert, Accordion, AccordionSummary, AccordionDetails, Typography 
+import {
+  Button, Box, TextField, Alert, Accordion, AccordionSummary, AccordionDetails, Typography
 } from '@mui/material';
-import {withRouter } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import './LoginRegister.css';
 import axios from 'axios';
 
@@ -35,26 +35,33 @@ class LoginRegister extends React.Component {
   }
 
   handleLogin = async () => {
+    const { login_name, password } = this.state.user;
+
     try {
-      const response = await axios.post('/admin/login', this.state.user, {
-        headers: { 'Content-Type': 'application/json' }
+      const response = await axios.post('/admin/login', {
+        login_name,
+        password
       });
+
       this.setState({
         showLoginError: false,
         showRegistrationError: false,
         showRegistrationSuccess: false,
       });
+
       this.props.changeUser(response.data);
       this.props.history.push('/users');
+
     } catch (error) {
       console.error(error);
+
       this.setState({
         showLoginError: true,
         showRegistrationError: false,
         showRegistrationSuccess: false,
       });
     }
-  }
+  };
 
   handleRegister = async () => {
     const { password, password_repeat } = this.state.user;
