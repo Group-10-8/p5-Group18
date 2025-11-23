@@ -5,9 +5,8 @@ import {
   ListItem,
   ListItemText,
   Typography,
-}
-from '@mui/material';
-import './userList.css';
+} from '@mui/material';
+import './UserList.css';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -25,6 +24,9 @@ class UserList extends React.Component {
   }
 
   componentDidMount() {
+    // Only fetch users if logged in
+    if (!this.props.user) return;
+
     axios.get('/user/list')
       .then(({ data }) =>
         this.setState({
@@ -42,7 +44,24 @@ class UserList extends React.Component {
   }
 
   render() {
-    const { users } = this.state;
+    const { users, isLoading, error } = this.state;
+    const { user } = this.props;
+
+    if (!user) {
+      return (
+        <Typography variant="body1">
+          Please log in to see the user list.
+        </Typography>
+      );
+    }
+
+    if (isLoading) {
+      return <Typography>Loading users...</Typography>;
+    }
+
+    if (error) {
+      return <Typography color="error">{error}</Typography>;
+    }
 
     return (
       <div className="user-list">
@@ -59,13 +78,13 @@ class UserList extends React.Component {
         </Typography>
 
         <List component="nav">
-          {users.map((user, index) => (
-            <React.Fragment key={user._id}>
+          {users.map((u, index) => (
+            <React.Fragment key={u._id}>
               <ListItem>
                 <ListItemText
                   primary={
-                    <Link to={`/users/${user._id}`}>
-                      {user.first_name} {user.last_name}
+                    <Link to={`/users/${u._id}`}>
+                      {u.first_name} {u.last_name}
                     </Link>
                   }
                 />

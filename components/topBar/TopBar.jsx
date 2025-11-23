@@ -4,49 +4,20 @@ import './TopBar.css';
 import axios from 'axios';
 
 /**
- * Define TopBar, a React component for project #5
+ * TopBar with login state and photo upload
  */
 class TopBar extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      user: null,
-      error: null,
-    };
 
     this.uploadInput = null;
     this.handleUpload = this.handleUpload.bind(this);
   }
 
-  componentDidMount() {
-    this.fetchUserData();
-    window.onhashchange = this.fetchUserData;
-  }
-
-  componentWillUnmount() {
-    window.onhashchange = null;
-  }
-
-  // Function to fetch user data
-  fetchUserData = () => {
-    const hash = window.location.hash;
-    const userId = hash.split('/')[2];
-
-    axios.get(`/user/${userId}`)
-      .then(({ data }) => {
-        this.setState({ user: data, error: null });
-      })
-      .catch(() => {
-        this.setState({ user: null, error: 'Error loading user data' });
-      });
-  };
-
   handleUpload(event) {
     event.preventDefault();
 
-    if (!this.uploadInput || this.uploadInput.files.length === 0) {
-      return;
-    }
+    if (!this.uploadInput || this.uploadInput.files.length === 0) return;
 
     const domForm = new FormData();
     domForm.append('uploadedphoto', this.uploadInput.files[0]);
@@ -54,7 +25,6 @@ class TopBar extends React.Component {
     axios.post('/photos/new', domForm)
       .then((res) => {
         console.log('Upload success:', res.data);
-        // nothing else required by your story
         this.uploadInput.value = '';
       })
       .catch((err) => {
@@ -63,20 +33,29 @@ class TopBar extends React.Component {
   }
 
   render() {
-    const { user } = this.state;
+    const { user, logout } = this.props;
 
     return (
-      <AppBar className="topbar-appBar" position="absolute">
-        <Toolbar>
-          <Typography variant="h5" color="inherit" className="topbar-name">
+      <AppBar className="topbar-appBar" position="fixed">
+        <Toolbar className="topbar-toolbar">
+          <Typography variant="h6" color="inherit">
             Group 18: Benjamin Taylor, Jordan Wise-Smith, Zack Brokaw, Kevin Richard, Rishi Jinwala
           </Typography>
-          <Typography variant="h5" color="inherit">
-            {user ? `${user.first_name} ${user.last_name}` : 'No data available'}
+
+          <div className="topbar-spacer" />
+
+          <Typography variant="h6" color="inherit" style={{ marginRight: '16px' }}>
+            {user ? `Hi ${user.first_name || user.login_name}` : 'Please Login'}
           </Typography>
 
           {user && (
-            <form onSubmit={this.handleUpload} style={{ marginLeft: '16px' }}>
+            <Button color="inherit" onClick={logout} style={{ marginRight: '16px' }}>
+              Logout
+            </Button>
+          )}
+
+          {user && (
+            <form onSubmit={this.handleUpload} className="topbar-upload-form">
               <input
                 type="file"
                 accept="image/*"

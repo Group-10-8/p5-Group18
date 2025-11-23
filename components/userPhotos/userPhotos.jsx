@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Typography, Divider, TextField, Modal } from '@mui/material';
-import './userPhotos.css';
+import './UserPhotos.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 

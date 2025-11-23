@@ -1,8 +1,18 @@
 .topbar-appBar {
   height: 60px;
-  justify-content: 'center';
 }
 
-.topbar-name {
+.topbar-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.topbar-spacer {
   flex-grow: 1;
+}
+
+.topbar-upload-form {
+  display: flex;
+  align-items: center;
 }

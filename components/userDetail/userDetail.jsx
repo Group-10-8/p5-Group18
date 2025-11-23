@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography } from '@mui/material';
-import { Link } from 'react-router-dom';
-import './userDetail.css';
+import { Link, withRouter } from 'react-router-dom';
+import './UserDetail.css';
 import axios from 'axios';
 
 /**
@@ -51,4 +51,4 @@ class UserDetail extends React.Component {
   }
 }
 
-export default UserDetail;
+export default withRouter(UserDetail);
