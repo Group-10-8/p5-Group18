@@ -46,7 +46,17 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 
 const session = require("express-session");
 const bodyParser = require("body-parser");
+const multer = require("multer");
+const fs = require("fs");
+
+// session + JSON body parser
+app.use(session({ secret: "secretKey", resave: false, saveUninitialized: false }));
 app.use(bodyParser.json());
+
+// for file upload forms
+const processFormBody = multer({
+  storage: multer.memoryStorage()
+}).single('uploadedphoto');
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
@@ -363,7 +373,47 @@ app.post("/user", async (req, res) => {
     res.status(500).send("Server error creating user");
   }
 });
+app.post("/photos/new", function (request, response) {
+  // Must be logged in
+  if (!request.session || !request.session.user_id) {
+    return response.status(401).send("Not logged in");
+  }
 
+  processFormBody(request, response, function (err) {
+    // If multer failed or no file was attached -> 400
+    if (err || !request.file) {
+      return response.status(400).send("No file uploaded.");
+    }
+
+    // Build a unique filename: U<timestamp><originalName>
+    const timestamp = new Date().valueOf();
+    const filename = "U" + String(timestamp) + request.file.originalname;
+
+    // Save file into ./images
+    fs.writeFile("./images/" + filename, request.file.buffer, async function (err) {
+      if (err) {
+        console.error("Error writing file:", err);
+        return response.status(500).send("Error saving file on server.");
+      }
+
+      try {
+        // Create Photo document in MongoDB
+        const newPhoto = await Photo.create({
+          file_name: filename,
+          date_time: new Date(),
+          user_id: request.session.user_id,
+          comments: []
+        });
+
+        // Success – send the created photo back
+        return response.status(200).send(newPhoto);
+      } catch (dbErr) {
+        console.error("Error creating Photo:", dbErr);
+        return response.status(500).send("Error saving photo in database.");
+      }
+    });
+  });
+});
 
 const server = app.listen(3000, function () {
   const port = server.address().port;
