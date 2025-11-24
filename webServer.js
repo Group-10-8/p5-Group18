@@ -302,7 +302,7 @@ app.get("/photosOfUser/:id", async function (request, response) {
   }
 });
 
-app.post("/commentsOfPhoto/:photoId", express.json(), async function (request, response) {
+app.post("/commentsOfPhoto/:photoId", async function (request, response) {
   const photoId = request.params.photoId;
   const userId = request.session.user_id;
   const { comment } = request.body;
