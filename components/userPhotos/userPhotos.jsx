@@ -11,14 +11,14 @@ import { Link } from 'react-router-dom';
 class UserPhotos extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      photos: [], 
-      error: null, 
+    this.state = {
+      photos: [],
+      error: null,
       loading: true,
       modalOpen: false,
       newComment: '',
       selectedPhotoId: null,
-     };
+    };
   }
 
   fetchPhotos = (userId) => {
@@ -64,16 +64,22 @@ class UserPhotos extends React.Component {
   handleAddComment = () => {
     const { selectedPhotoId, newComment } = this.state;
 
+    if (!newComment || newComment.trim() === "") {
+      alert("Comment cannot be empty.");
+      return;
+    }
+
     axios.post(`/commentsOfPhoto/${selectedPhotoId}`, {
-      comment: newComment
+      comment: newComment.trim()
     })
-    .then(() => {
-      this.fetchPhotos(this.props.match.params.userId);
-      this.setState({ selectedPhotoId: null, newComment: '' });
-    })
-    .catch((err) => {
-      console.error("Error adding comment:", err);
-    });
+      .then(() => {
+        this.fetchPhotos(this.props.match.params.userId);
+        this.setState({ selectedPhotoId: null, newComment: '' });
+      })
+      .catch((err) => {
+        console.error("Error adding comment:", err);
+        alert("Error adding comment.");
+      });
   };
 
   render() {

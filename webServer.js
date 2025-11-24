@@ -311,6 +311,10 @@ app.post("/commentsOfPhoto/:photoId", express.json(), async function (request, r
     return response.status(401).send("User must be logged in to comment.");
   }
 
+  if (!comment || comment.trim() === "") {
+    return response.status(400).send("Comment cannot be empty.");
+  }
+
   if (!mongoose.Types.ObjectId.isValid(photoId) || !mongoose.Types.ObjectId.isValid(userId)) {
     return response.status(400).send("Invalid photo id or user id.");
   }

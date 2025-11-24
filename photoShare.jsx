@@ -7,7 +7,7 @@ import './styles/main.css';
 import TopBar from './components/topBar/TopBar';
 import UserDetail from './components/UserDetail/UserDetail';
 import UserList from './components/userList/userList';
-import UserPhotos from './components/UserPhotos/UserPhotos';
+import UserPhotos from './components/userPhotos/userPhotos';
 import LoginRegister from './components/LoginRegister/LoginRegister';
 
 class PhotoShare extends React.Component {
