@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 import { Grid, Paper } from '@mui/material';
+import axios from 'axios';
 import './styles/main.css';
 
 import TopBar from './components/topBar/TopBar';
@@ -18,14 +19,23 @@ class PhotoShare extends React.Component {
     };
   }
 
+  componentDidMount() {
+    const userData = localStorage.getItem('currentUser');
+    if (userData) {
+      this.setState({ currentUser: JSON.parse(userData)});
+    }
+  }
+
   setCurrentUser = (user) => {
     this.setState({ currentUser: user });
+    localStorage.setItem('currentUser', JSON.stringify(user));
   };
 
   handleLogout = () => {
     axios.post('/admin/logout')
       .then(() => {
         this.setState({ currentUser: null });
+        localStorage.removeItem('currentUser');
       })
       .catch(err => console.error(err));
   };
