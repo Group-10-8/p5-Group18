@@ -15,17 +15,26 @@ class TopBar extends React.Component {
   }
 
   handleUpload(event) {
-    event.preventDefault();
+    // Support being called from a change event or a form submit.
+    try {
+      if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    } catch (e) {}
 
-    if (!this.uploadInput || this.uploadInput.files.length === 0) return;
+    const file = this.uploadInput && this.uploadInput.files && this.uploadInput.files[0];
+    if (!file) return;
 
     const domForm = new FormData();
-    domForm.append('uploadedphoto', this.uploadInput.files[0]);
+    domForm.append('uploadedphoto', file);
 
     axios.post('/photos/new', domForm)
       .then((res) => {
         console.log('Upload success:', res.data);
-        this.uploadInput.value = '';
+        // clear the input so the same file can be selected again later
+        if (this.uploadInput) this.uploadInput.value = '';
+        // notify parent that upload succeeded so UI can refresh
+        if (this.props.onUpload) {
+          try { this.props.onUpload(res.data); } catch (e) { console.warn('onUpload handler failed', e); }
+        }
       })
       .catch((err) => {
         console.error('Upload error:', err);
@@ -55,16 +64,18 @@ class TopBar extends React.Component {
           )}
 
           {user && (
-            <form onSubmit={this.handleUpload} className="topbar-upload-form">
+            <div className="topbar-upload-form">
               <input
                 type="file"
                 accept="image/*"
                 ref={(domFileRef) => { this.uploadInput = domFileRef; }}
+                onChange={this.handleUpload}
+                style={{ display: 'none' }}
               />
-              <Button type="submit" variant="contained" style={{ marginLeft: '8px' }}>
+              <Button variant="contained" style={{ marginLeft: '8px' }} onClick={() => { if (this.uploadInput) this.uploadInput.click(); }}>
                 Add Photo
               </Button>
-            </form>
+            </div>
           )}
         </Toolbar>
       </AppBar>

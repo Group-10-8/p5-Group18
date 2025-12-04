@@ -43,6 +43,11 @@ class UserPhotos extends React.Component {
     if (prevId !== currentId) {
       this.fetchPhotos(currentId);
     }
+
+    // Re-fetch if an upload happened (TopBar notifies PhotoShare which bumps uploadCounter)
+    if (prevProps.uploadCounter !== this.props.uploadCounter) {
+      this.fetchPhotos(this.props.match.params.userId);
+    }
   }
 
   formatDate(dateString) {
@@ -82,6 +87,40 @@ class UserPhotos extends React.Component {
       });
   };
 
+  handleDeletePhoto = (photoId) => {
+    if (!this.props.user) {
+      alert('You must be logged in to delete a photo.');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to delete this photo?')) return;
+
+    axios.delete(`/photos/${photoId}`)
+      .then(() => this.fetchPhotos(this.props.match.params.userId))
+      .catch(err => {
+        console.error('Error deleting photo:', err);
+        const msg = err?.response?.data || err.message || 'Error deleting photo';
+        alert(msg);
+      });
+  };
+
+  handleDeleteComment = (commentId) => {
+    if (!this.props.user) {
+      alert('You must be logged in to delete a comment.');
+      return;
+    }
+
+    if (!window.confirm('Delete this comment?')) return;
+
+    axios.delete(`/comments/${commentId}`)
+      .then(() => this.fetchPhotos(this.props.match.params.userId))
+      .catch(err => {
+        console.error('Error deleting comment:', err);
+        const msg = err?.response?.data || err.message || 'Error deleting comment';
+        alert(msg);
+      });
+  };
+
   render() {
     const { photos, error, loading } = this.state;
 
@@ -111,6 +150,9 @@ class UserPhotos extends React.Component {
                 Uploaded: {this.formatDate(photo.date_time)}
               </Typography>
               <Button onClick={() => this.handleOpen(photo._id)}>Add Comment</Button>
+              {this.props.user && this.props.user._id && photo.user_id && this.props.user._id.toString() === photo.user_id.toString() && (
+                <Button color="error" onClick={() => this.handleDeletePhoto(photo._id)}>Delete Photo</Button>
+              )}
             </div>
 
             {this.state.selectedPhotoId === photo._id && (
@@ -154,6 +196,9 @@ class UserPhotos extends React.Component {
                     <Typography variant="body2" className="comment-text">
                       {comment.comment}
                     </Typography>
+                    {this.props.user && comment.user && comment.user._id && this.props.user._id && this.props.user._id.toString() === comment.user._id.toString() && (
+                      <Button size="small" onClick={() => this.handleDeleteComment(comment._id)}>Delete Comment</Button>
+                    )}
                   </div>
                 ))}
               </div>

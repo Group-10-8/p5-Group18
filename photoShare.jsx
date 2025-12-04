@@ -16,6 +16,7 @@ class PhotoShare extends React.Component {
     super(props);
     this.state = {
       currentUser: null,
+      uploadCounter: 0,
     };
   }
 
@@ -29,6 +30,11 @@ class PhotoShare extends React.Component {
   setCurrentUser = (user) => {
     this.setState({ currentUser: user });
     localStorage.setItem('currentUser', JSON.stringify(user));
+  };
+
+  handleUploadSuccess = (photo) => {
+    // bump counter so child components can detect and refresh
+    this.setState((prev) => ({ uploadCounter: (prev.uploadCounter || 0) + 1 }));
   };
 
   handleLogout = () => {
@@ -48,8 +54,8 @@ class PhotoShare extends React.Component {
       <HashRouter>
         <div>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TopBar user={currentUser} logout={this.handleLogout} />
+              <Grid item xs={12}>
+              <TopBar user={currentUser} logout={this.handleLogout} onUpload={this.handleUploadSuccess} />
             </Grid>
           </Grid>
 
@@ -79,13 +85,13 @@ class PhotoShare extends React.Component {
                   <Route
                     path="/users/:userId"
                     render={(props) =>
-                      currentUser ? <UserDetail {...props} /> : <Redirect to="/login" />
+                      currentUser ? <UserDetail {...props} user={currentUser} changeUser={this.setCurrentUser} /> : <Redirect to="/login" />
                     }
                   />
                   <Route
                     path="/photos/:userId"
                     render={(props) =>
-                      currentUser ? <UserPhotos {...props} /> : <Redirect to="/login" />
+                      currentUser ? <UserPhotos {...props} user={currentUser} changeUser={this.setCurrentUser} uploadCounter={this.state.uploadCounter} /> : <Redirect to="/login" />
                     }
                   />
                   <Route

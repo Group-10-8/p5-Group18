@@ -380,8 +380,17 @@ app.post("/user", async (req, res) => {
     });
 
     await newUser.save();
+    
+    // Set session to log the user in immediately
+    req.session.user_id = newUser._id;
 
-    res.status(200).send("User registered successfully");
+    // Return a user object so the frontend can use it (not just a string)
+    res.status(200).send({
+      _id: newUser._id,
+      first_name: newUser.first_name,
+      last_name: newUser.last_name,
+      login_name: newUser.login_name,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error creating user");
@@ -427,6 +436,159 @@ app.post("/photos/new", function (request, response) {
       }
     });
   });
+});
+
+// DELETE a photo (only if the logged-in user owns it)
+app.delete("/photos/:photoId", async (req, res) => {
+  const userId = String(req.session.user_id);
+  const photoId = req.params.photoId;
+
+  if (!userId) {
+    return res.status(401).send("Not logged in");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(photoId)) {
+    return res.status(400).send("Invalid photo ID");
+  }
+
+  try {
+    const photo = await Photo.findById(photoId);
+    if (!photo) {
+      return res.status(404).send("Photo not found");
+    }
+
+    // Ensure ownership
+    if (photo.user_id.toString() !== userId) {
+      return res.status(403).send("You do not own this photo");
+    }
+
+
+    // Delete image file (await best-effort)
+    try {
+      await fs.promises.unlink(`./images/${photo.file_name}`);
+    } catch (e) {
+      console.warn("Could not delete image file:", e);
+    }
+
+    // Remove document
+    await Photo.findByIdAndDelete(photoId);
+
+    res.status(200).send("Photo deleted successfully");
+  } catch (err) {
+    console.error("Delete photo error:", err);
+    res.status(500).send("Error deleting photo");
+  }
+});
+
+// DELETE a comment the user made (on any photo)
+app.delete("/comments/:commentId", async (req, res) => {
+  const userId = String(req.session.user_id);
+  const commentId = req.params.commentId;
+
+  if (!userId) {
+    return res.status(401).send("Not logged in");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    return res.status(400).send("Invalid comment ID");
+  }
+
+  try {
+    // Find the photo that contains this comment
+    const photo = await Photo.findOne({ "comments._id": commentId });
+
+    if (!photo) {
+      return res.status(404).send("Comment not found");
+    }
+
+    // Find the specific comment
+    const comment = photo.comments.id(commentId);
+
+    if (comment.user_id.toString() !== userId) {
+      return res.status(403).send("Cannot delete comments you do not own");
+    }
+
+    // Remove comment from subdocument array. Use supported subdocument removal.
+    if (typeof comment.remove === 'function') {
+      comment.remove();
+    } else {
+      // Fallback to pulling by id
+      photo.comments = photo.comments.filter(c => String(c._id) !== String(commentId));
+    }
+    await photo.save();
+
+    res.status(200).send("Comment deleted successfully");
+  } catch (err) {
+    console.error("Delete comment error:", err);
+    res.status(500).send("Error deleting comment");
+  }
+});
+
+// DELETE user account (remove user, their photos/files, all their comments, and log out)
+app.delete("/user/deleteAccount", async (req, res) => {
+  const userId = req.session.user_id;
+
+  if (!userId) {
+    return res.status(401).send("Not logged in");
+  }
+
+  try {
+    // Validate and normalize the user id for DB operations
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).send("Invalid user id");
+    }
+
+    const objUserId = mongoose.Types.ObjectId(userId);
+
+    // 1. Delete user photos / files
+    const photos = await Photo.find({ user_id: objUserId });
+
+    // Delete image files for user's photos and count files deleted
+    let filesDeleted = 0;
+    await Promise.all(photos.map(async (p) => {
+      try {
+        await fs.promises.unlink(`./images/${p.file_name}`);
+        filesDeleted += 1;
+      } catch (e) {
+        console.warn("Could not delete file:", p.file_name, e);
+      }
+    }));
+
+    // Remove photo documents owned by the user
+    const photosDeleteResult = await Photo.deleteMany({ user_id: objUserId });
+    const photosDeleted = photosDeleteResult.deletedCount || (photos ? photos.length : 0);
+
+    // Count comments authored by the user (before removal)
+    const commentCountAgg = await Photo.aggregate([
+      { $unwind: '$comments' },
+      { $match: { 'comments.user_id': objUserId } },
+      { $count: 'count' }
+    ]);
+    const commentsToRemove = commentCountAgg[0] ? commentCountAgg[0].count : 0;
+
+    // 2. Delete user comments (any photo)
+    await Photo.updateMany(
+      {},
+      { $pull: { comments: { user_id: objUserId } } }
+    );
+
+    // 3. Delete user document
+    await User.findByIdAndDelete(objUserId);
+
+    // 4. Log out user (await destroy)
+    await new Promise((resolve) => req.session.destroy(resolve));
+
+    // 5. Return summary
+    res.status(200).send({
+      message: 'Account deleted successfully',
+      photosDeleted,
+      filesDeleted,
+      commentsRemoved: commentsToRemove,
+    });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    res.status(500).send("Server error while deleting account");
+  }
 });
 
 const server = app.listen(3000, function () {
