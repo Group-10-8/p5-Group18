@@ -50,7 +50,16 @@ const multer = require("multer");
 const fs = require("fs");
 
 // session + JSON body parser
-app.use(session({ secret: "secretKey", resave: false, saveUninitialized: false }));
+app.use(session({
+  secret: "secretKey",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: false,
+    secure: false,
+    sameSite: "lax"
+  }
+}));
 app.use(bodyParser.json());
 
 // for file upload forms
@@ -159,7 +168,7 @@ app.use((req, res, next) => {
   }
 
   if (req.path === "/user" && req.method === "POST") {
-    return next(); 
+    return next();
   }
 
   if (!req.session.user_id) {
@@ -319,7 +328,7 @@ app.post("/commentsOfPhoto/:photoId", async function (request, response) {
   if (!mongoose.Types.ObjectId.isValid(photoId) || !mongoose.Types.ObjectId.isValid(userId)) {
     return response.status(400).send("Invalid photo id or user id.");
   }
-  
+
   try {
     const photo = await Photo.findById(photoId);
     if (!photo) {
