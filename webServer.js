@@ -50,22 +50,24 @@ const multer = require("multer");
 const fs = require("fs");
 
 // session + JSON body parser
-app.use(session({
-  secret: "secretKey",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: false,
-    secure: false,
-    sameSite: "lax"
-  }
-}));
+app.use(
+  session({
+    secret: "secretKey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
+    },
+  })
+);
 app.use(bodyParser.json());
 
 // for file upload forms
 const processFormBody = multer({
-  storage: multer.memoryStorage()
-}).single('uploadedphoto');
+  storage: multer.memoryStorage(),
+}).single("uploadedphoto");
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
@@ -75,6 +77,24 @@ mongoose.connect("mongodb://127.0.0.1/project6", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+// Helper to record a user's last activity
+async function setLastActivity(userId, type, photoFileName = null) {
+  if (!userId) return;
+  try {
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        last_activity_type: type,
+        last_activity_time: new Date(),
+        last_activity_photo_file_name: photoFileName,
+      },
+      { new: false }
+    ).exec();
+  } catch (err) {
+    console.error("Error updating last activity for user", userId, err);
+  }
+}
 
 // We have the express static module
 // (http://expressjs.com/en/starter/static-files.html) do all the work for us.
@@ -88,7 +108,7 @@ app.get("/", function (request, response) {
  * Use express to handle argument passing in the URL. This .get will cause
  * express to accept URLs with /test/<something> and return the something in
  * request.params.p1.
- * 
+ *
  * If implement the get as follows:
  * /test        - Returns the SchemaInfo object of the database in JSON format.
  *                This is good for testing connectivity with MongoDB.
@@ -179,7 +199,7 @@ app.use((req, res, next) => {
 });
 
 /*
-Login/Logout and scheme update part 
+Login/Logout and scheme update part
 */
 
 app.post("/admin/login", async (req, res) => {
@@ -197,6 +217,9 @@ app.post("/admin/login", async (req, res) => {
 
   req.session.user_id = user._id;
 
+  // record last activity: login
+  await setLastActivity(user._id, "login");
+
   res.status(200).send({
     _id: user._id,
     first_name: user.first_name,
@@ -205,10 +228,15 @@ app.post("/admin/login", async (req, res) => {
   });
 });
 
-app.post("/admin/logout", (req, res) => {
+app.post("/admin/logout", async (req, res) => {
   if (!req.session.user_id) {
     return res.status(400).send("Not logged in");
   }
+
+  const userId = req.session.user_id;
+
+  // record last activity: logout
+  await setLastActivity(userId, "logout");
 
   req.session.destroy(() => {
     res.status(200).send("Logged out");
@@ -219,13 +247,16 @@ app.post("/admin/logout", (req, res) => {
  * URL /user/list - Returns all the User objects.
  * New MongoDB Implementation.
  */
-app.get('/user/list', async function (req, res) {
+app.get("/user/list", async function (req, res) {
   try {
-    const users = await User.find({}, '_id first_name last_name').lean();
+    const users = await User.find(
+      {},
+      "_id first_name last_name last_activity_type last_activity_time last_activity_photo_file_name"
+    ).lean();
     res.status(200).send(users);
   } catch (err) {
-    console.error('Error fetching user list:', err);
-    res.status(500).send({ message: 'Internal server error' });
+    console.error("Error fetching user list:", err);
+    res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -325,7 +356,10 @@ app.post("/commentsOfPhoto/:photoId", async function (request, response) {
     return response.status(400).send("Comment cannot be empty.");
   }
 
-  if (!mongoose.Types.ObjectId.isValid(photoId) || !mongoose.Types.ObjectId.isValid(userId)) {
+  if (
+    !mongoose.Types.ObjectId.isValid(photoId) ||
+    !mongoose.Types.ObjectId.isValid(userId)
+  ) {
     return response.status(400).send("Invalid photo id or user id.");
   }
 
@@ -341,6 +375,10 @@ app.post("/commentsOfPhoto/:photoId", async function (request, response) {
     };
     photo.comments.push(newComment);
     await photo.save();
+
+    // record last activity: comment
+    await setLastActivity(userId, "comment");
+
     response.status(200).send("Comment added successfully.");
   } catch (err) {
     console.error("Error adding comment:", err);
@@ -355,7 +393,7 @@ app.get("/session", async (req, res) => {
 
   try {
     const user = await User.findById(
-      req.session.user_id, 
+      req.session.user_id,
       "_id first_name last_name login_name"
     ).lean();
 
@@ -365,7 +403,7 @@ app.get("/session", async (req, res) => {
 
     res.status(200).send({
       logged_in: true,
-      user
+      user,
     });
   } catch (err) {
     console.error(err);
@@ -405,7 +443,10 @@ app.post("/user", async (req, res) => {
     });
 
     await newUser.save();
-    
+
+    // record last activity: registered
+    await setLastActivity(newUser._id, "registered");
+
     // Set session to log the user in immediately
     req.session.user_id = newUser._id;
 
@@ -421,6 +462,7 @@ app.post("/user", async (req, res) => {
     res.status(500).send("Server error creating user");
   }
 });
+
 app.post("/photos/new", function (request, response) {
   // Must be logged in
   if (!request.session || !request.session.user_id) {
@@ -438,28 +480,41 @@ app.post("/photos/new", function (request, response) {
     const filename = "U" + String(timestamp) + request.file.originalname;
 
     // Save file into ./images
-    fs.writeFile("./images/" + filename, request.file.buffer, async function (err) {
-      if (err) {
-        console.error("Error writing file:", err);
-        return response.status(500).send("Error saving file on server.");
-      }
+    fs.writeFile(
+      "./images/" + filename,
+      request.file.buffer,
+      async function (err) {
+        if (err) {
+          console.error("Error writing file:", err);
+          return response.status(500).send("Error saving file on server.");
+        }
 
-      try {
-        // Create Photo document in MongoDB
-        const newPhoto = await Photo.create({
-          file_name: filename,
-          date_time: new Date(),
-          user_id: request.session.user_id,
-          comments: []
-        });
+        try {
+          // Create Photo document in MongoDB
+          const newPhoto = await Photo.create({
+            file_name: filename,
+            date_time: new Date(),
+            user_id: request.session.user_id,
+            comments: [],
+          });
 
-        // Success – send the created photo back
-        return response.status(200).send(newPhoto);
-      } catch (dbErr) {
-        console.error("Error creating Photo:", dbErr);
-        return response.status(500).send("Error saving photo in database.");
+          // record last activity: photo (with filename for thumbnail)
+          await setLastActivity(
+            request.session.user_id,
+            "photo",
+            filename
+          );
+
+          // Success – send the created photo back
+          return response.status(200).send(newPhoto);
+        } catch (dbErr) {
+          console.error("Error creating Photo:", dbErr);
+          return response
+            .status(500)
+            .send("Error saving photo in database.");
+        }
       }
-    });
+    );
   });
 });
 
@@ -486,7 +541,6 @@ app.delete("/photos/:photoId", async (req, res) => {
     if (photo.user_id.toString() !== userId) {
       return res.status(403).send("You do not own this photo");
     }
-
 
     // Delete image file (await best-effort)
     try {
@@ -530,15 +584,19 @@ app.delete("/comments/:commentId", async (req, res) => {
     const comment = photo.comments.id(commentId);
 
     if (comment.user_id.toString() !== userId) {
-      return res.status(403).send("Cannot delete comments you do not own");
+      return res
+        .status(403)
+        .send("Cannot delete comments you do not own");
     }
 
     // Remove comment from subdocument array. Use supported subdocument removal.
-    if (typeof comment.remove === 'function') {
+    if (typeof comment.remove === "function") {
       comment.remove();
     } else {
       // Fallback to pulling by id
-      photo.comments = photo.comments.filter(c => String(c._id) !== String(commentId));
+      photo.comments = photo.comments.filter(
+        (c) => String(c._id) !== String(commentId)
+      );
     }
     await photo.save();
 
@@ -570,26 +628,33 @@ app.delete("/user/deleteAccount", async (req, res) => {
 
     // Delete image files for user's photos and count files deleted
     let filesDeleted = 0;
-    await Promise.all(photos.map(async (p) => {
-      try {
-        await fs.promises.unlink(`./images/${p.file_name}`);
-        filesDeleted += 1;
-      } catch (e) {
-        console.warn("Could not delete file:", p.file_name, e);
-      }
-    }));
+    await Promise.all(
+      photos.map(async (p) => {
+        try {
+          await fs.promises.unlink(`./images/${p.file_name}`);
+          filesDeleted += 1;
+        } catch (e) {
+          console.warn("Could not delete file:", p.file_name, e);
+        }
+      })
+    );
 
     // Remove photo documents owned by the user
-    const photosDeleteResult = await Photo.deleteMany({ user_id: objUserId });
-    const photosDeleted = photosDeleteResult.deletedCount || (photos ? photos.length : 0);
+    const photosDeleteResult = await Photo.deleteMany({
+      user_id: objUserId,
+    });
+    const photosDeleted =
+      photosDeleteResult.deletedCount || (photos ? photos.length : 0);
 
     // Count comments authored by the user (before removal)
     const commentCountAgg = await Photo.aggregate([
-      { $unwind: '$comments' },
-      { $match: { 'comments.user_id': objUserId } },
-      { $count: 'count' }
+      { $unwind: "$comments" },
+      { $match: { "comments.user_id": objUserId } },
+      { $count: "count" },
     ]);
-    const commentsToRemove = commentCountAgg[0] ? commentCountAgg[0].count : 0;
+    const commentsToRemove = commentCountAgg[0]
+      ? commentCountAgg[0].count
+      : 0;
 
     // 2. Delete user comments (any photo)
     await Photo.updateMany(
@@ -605,7 +670,7 @@ app.delete("/user/deleteAccount", async (req, res) => {
 
     // 5. Return summary
     res.status(200).send({
-      message: 'Account deleted successfully',
+      message: "Account deleted successfully",
       photosDeleted,
       filesDeleted,
       commentsRemoved: commentsToRemove,
@@ -620,8 +685,8 @@ const server = app.listen(3000, function () {
   const port = server.address().port;
   console.log(
     "Listening at http://localhost:" +
-    port +
-    " exporting the directory " +
-    __dirname
+      port +
+      " exporting the directory " +
+      __dirname
   );
 });
