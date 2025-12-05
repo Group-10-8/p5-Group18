@@ -17,11 +17,11 @@ const userSchema = new mongoose.Schema({
   occupation: String,
 
   // NEW: fields to store the user's last activity
-  last_activity_type: { type: String, default: null },          // "photo" | "comment" | "registered" | "login" | "logout"
-  last_activity_time: { type: Date, default: null },            // when it happened
-  last_activity_photo_file_name: { type: String, default: null } // last photo filename (for thumbnail), only for type "photo"
+  last_activity_type: { type: String, default: null },           // "photo" | "comment" | "registered" | "login" | "logout"
+  last_activity_time: { type: Date, default: null },             // when it happened
+  last_activity_photo_file_name: { type: String, default: null } // last photo filename for thumbnails
 });
 
-// Single model + export (your old file defined it twice)
+// Single model + export
 const User = mongoose.model("User", userSchema);
 module.exports = User;
