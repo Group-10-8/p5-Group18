@@ -348,6 +348,31 @@ app.post("/commentsOfPhoto/:photoId", async function (request, response) {
   }
 });
 
+app.get("/session", async (req, res) => {
+  if (!req.session.user_id) {
+    return res.status(200).send({ logged_in: false });
+  }
+
+  try {
+    const user = await User.findById(
+      req.session.user_id, 
+      "_id first_name last_name login_name"
+    ).lean();
+
+    if (!user) {
+      return res.status(200).send({ logged_in: false });
+    }
+
+    res.status(200).send({
+      logged_in: true,
+      user
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
+
 app.post("/user", async (req, res) => {
   const {
     login_name,

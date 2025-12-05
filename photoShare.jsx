@@ -21,15 +21,18 @@ class PhotoShare extends React.Component {
   }
 
   componentDidMount() {
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      this.setState({ currentUser: JSON.parse(userData)});
-    }
+    axios.get("/session")
+      .then((res) => {
+        if (res.data.logged_in) {
+          this.setState({ currentUser: res.data.user });
+        }
+      })
+      .catch(err => console.error(err));
   }
+
 
   setCurrentUser = (user) => {
     this.setState({ currentUser: user });
-    localStorage.setItem('currentUser', JSON.stringify(user));
   };
 
   handleUploadSuccess = (photo) => {
@@ -41,7 +44,6 @@ class PhotoShare extends React.Component {
     axios.post('/admin/logout')
       .then(() => {
         this.setState({ currentUser: null });
-        localStorage.removeItem('currentUser');
       })
       .catch(err => console.error(err));
   };
@@ -54,7 +56,7 @@ class PhotoShare extends React.Component {
       <HashRouter>
         <div>
           <Grid container spacing={2}>
-              <Grid item xs={12}>
+            <Grid item xs={12}>
               <TopBar user={currentUser} logout={this.handleLogout} onUpload={this.handleUploadSuccess} />
             </Grid>
           </Grid>
