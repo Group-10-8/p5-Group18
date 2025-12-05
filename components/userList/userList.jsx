@@ -5,13 +5,52 @@ import {
   ListItem,
   ListItemText,
   Typography,
+  ListItemAvatar,
+  Avatar,
 } from '@mui/material';
 import './UserList.css';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 /**
- * Define UserList, a React component of project #5
+ * Helper: format date/time nicely.
+ */
+function formatTime(dt) {
+  if (!dt) return '';
+  try {
+    return new Date(dt).toLocaleString();
+  } catch {
+    return String(dt);
+  }
+}
+
+/**
+ * Helper: build human-readable activity line.
+ */
+function activityText(user) {
+  const type = user.last_activity_type;
+  const time = formatTime(user.last_activity_time);
+
+  if (!type) return 'No activity yet';
+
+  switch (type) {
+    case 'photo':
+      return `posted a photo • ${time}`;
+    case 'comment':
+      return `added a comment • ${time}`;
+    case 'registered':
+      return `registered as a user • ${time}`;
+    case 'login':
+      return `logged in • ${time}`;
+    case 'logout':
+      return `logged out • ${time}`;
+    default:
+      return `activity • ${time}`;
+  }
+}
+
+/**
+ * Define UserList, a React component of project #5/6
  */
 class UserList extends React.Component {
   constructor(props) {
@@ -21,26 +60,65 @@ class UserList extends React.Component {
       isLoading: true,
       error: null,
     };
+    this.intervalId = null;
   }
 
-  componentDidMount() {
-    // Only fetch users if logged in
-    if (!this.props.user) return;
-
+  fetchUsers = () => {
     axios.get('/user/list')
       .then(({ data }) =>
         this.setState({
           users: data || [],
           isLoading: false,
+          error: null,
         })
       )
       .catch((err) =>
         this.setState({
           users: [],
           isLoading: false,
-          error: err?.statusText || "Failed to load users.",
+          error: err?.statusText || 'Failed to load users.',
         })
       );
+  };
+
+  componentDidMount() {
+    // Only fetch users if logged in
+    if (!this.props.user) return;
+
+    this.fetchUsers();
+
+    // Auto-refresh every 10 seconds
+    this.intervalId = setInterval(this.fetchUsers, 10000);
+  }
+
+  componentDidUpdate(prevProps) {
+    // If user just logged in, start fetching + interval
+    if (!prevProps.user && this.props.user) {
+      this.setState({ isLoading: true }, this.fetchUsers);
+      if (!this.intervalId) {
+        this.intervalId = setInterval(this.fetchUsers, 10000);
+      }
+    }
+
+    // If user just logged out, stop interval and clear data
+    if (prevProps.user && !this.props.user) {
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+      this.setState({
+        users: [],
+        isLoading: false,
+        error: null,
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
   }
 
   render() {
@@ -69,34 +147,48 @@ class UserList extends React.Component {
           Users
         </Typography>
 
-        <Typography variant="body1">
-          This is the user list, which takes up 3/12 of the window.
-          You might choose to use{" "}
-          <a href="https://mui.com/components/lists/">Lists</a> and{" "}
-          <a href="https://mui.com/components/dividers/">Dividers</a> to
-          display your users like so:
-        </Typography>
-
         <List component="nav">
-          {users.map((u, index) => (
-            <React.Fragment key={u._id}>
-              <ListItem>
-                <ListItemText
-                  primary={
-                    <Link to={`/users/${u._id}`}>
-                      {u.first_name} {u.last_name}
-                    </Link>
-                  }
-                />
-              </ListItem>
-              {index !== users.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-        </List>
+          {users.map((u, index) => {
+            const thumb =
+              u.last_activity_type === 'photo' &&
+              u.last_activity_photo_file_name
+                ? `/images/${u.last_activity_photo_file_name}`
+                : null;
 
-        <Typography variant="body1">
-          The model now comes from <code>/user/list</code> using axios.
-        </Typography>
+            return (
+              <React.Fragment key={u._id}>
+                <ListItem>
+                  {/** Thumbnail or initials avatar */}
+                  <ListItemAvatar>
+                    {thumb ? (
+                      <Avatar
+                        alt="thumb"
+                        src={thumb}
+                        variant="rounded"
+                        sx={{ width: 40, height: 40 }}
+                      />
+                    ) : (
+                      <Avatar sx={{ width: 40, height: 40 }}>
+                        {u.first_name?.[0]}
+                        {u.last_name?.[0]}
+                      </Avatar>
+                    )}
+                  </ListItemAvatar>
+
+                  <ListItemText
+                    primary={
+                      <Link to={`/users/${u._id}`}>
+                        {u.first_name} {u.last_name}
+                      </Link>
+                    }
+                    secondary={activityText(u)}
+                  />
+                </ListItem>
+                {index !== users.length - 1 && <Divider />}
+              </React.Fragment>
+            );
+          })}
+        </List>
       </div>
     );
   }
