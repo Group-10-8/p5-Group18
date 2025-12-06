@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Typography, Divider, TextField, Modal } from '@mui/material';
 import './UserPhotos.css';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom'; //with router to updates correctly and history
 
 /**
  * UserPhotos Component
@@ -18,8 +18,35 @@ class UserPhotos extends React.Component {
       modalOpen: false,
       newComment: '',
       selectedPhotoId: null,
+      currentIndex: 0,
     };
   }
+
+  //added and shows the correct photo with URL and syncs the whole display 
+  syncIndexWithLocation = () => {  
+    const { photos, currentIndex } = this.state;  
+
+    if (!photos || photos.length === 0) {  
+      return;  
+    }  
+
+    const search = (this.props.location && this.props.location.search) || '';  
+    const params = new URLSearchParams(search);  
+    const photoId = params.get('photoId');  
+
+    let newIndex = 0; 
+    if (photoId) {  
+      const idx = photos.findIndex((p) => p._id === photoId);  
+      if (idx >= 0) {  
+        newIndex = idx;  
+      }  
+    }  
+
+    if (newIndex !== currentIndex) {  
+      this.setState({ currentIndex: newIndex });  
+    }  
+  };  
+
 
   fetchPhotos = (userId) => {
     axios.get(`/photosOfUser/${userId}`)
@@ -28,7 +55,7 @@ class UserPhotos extends React.Component {
       })
       .catch((err) => {
         console.error("Error fetching photos:", err);
-        this.setState({ photos: [], error: err, loading: false });
+        this.setState({ photos: [], error: err, loading: false }, this.syncIndexWithLocation);
       });
   };
 
@@ -48,7 +75,19 @@ class UserPhotos extends React.Component {
     if (prevProps.uploadCounter !== this.props.uploadCounter) {
       this.fetchPhotos(this.props.match.params.userId);
     }
+
+    //added and this updates the display to show the correct image when URL changes
+    if (
+      prevProps.location &&
+      this.props.location &&
+      prevProps.location.search !== this.props.location.search &&
+      this.state.photos.length
+    ) {
+      this.syncIndexWithLocation();  
+    }  
+
   }
+
 
   formatDate(dateString) {
     try {
@@ -121,8 +160,24 @@ class UserPhotos extends React.Component {
       });
   };
 
+  //added and this updates display with next or previous photo and updates the URL
+  handleStep = (direction) => {  
+    const { photos, currentIndex } = this.state;  
+    if (!photos || photos.length === 0) return;   
+
+    const newIndex = currentIndex + direction;    
+    if (newIndex < 0 || newIndex >= photos.length) {  
+      return;                                     
+    }                                             
+    const userId = this.props.match.params.userId;     
+    const newPhotoId = photos[newIndex]._id;           
+
+    this.props.history.push(`/photos/${userId}?photoId=${newPhotoId}`);  
+  };  
+
+
   render() {
-    const { photos, error, loading } = this.state;
+    const { photos, error, loading, currentIndex } = this.state;
 
     if (loading) {
       return <Typography variant="body1">Loading photos...</Typography>;
@@ -136,9 +191,35 @@ class UserPhotos extends React.Component {
       return <Typography>No photos available for this user.</Typography>;
     }
 
+    const atFirst = currentIndex === 0; //disable prev button when cannot go further back                     
+    const atLast = currentIndex === photos.length - 1; //disable the next button when cannot go further front
+
+    //updated to only show one photo at a time based on URL, and added a next and prev button to change photos.
     return (
       <div className="user-photos-container">
-        {photos.map((photo) => (
+        <div className="photo-stepper-controls">  
+          <Button
+            variant="contained"
+            onClick={() => this.handleStep(-1)}   
+            disabled={atFirst}                   
+          >
+            Previous
+          </Button>
+
+          <Typography variant="body2" sx={{ mx: 2 }}>  
+            Photo {currentIndex + 1} of {photos.length} 
+          </Typography>
+
+          <Button
+            variant="contained"
+            onClick={() => this.handleStep(1)}    
+            disabled={atLast}                    
+          >
+            Next
+          </Button>
+        </div>
+        {photos.map((photo, index) => (
+          index === currentIndex && (
           <div key={photo._id} className="photo-card">
             <img
               className="photo-img"
@@ -204,10 +285,12 @@ class UserPhotos extends React.Component {
               </div>
             )}
           </div>
+          )
         ))}
       </div>
     );
   }
 }
 
-export default UserPhotos;
+//so it updates correctly 
+export default withRouter(UserPhotos);

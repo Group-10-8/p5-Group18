@@ -110,3 +110,11 @@
   font-size: 20px;
   cursor: pointer;
 }
+
+/*control bar to make it look cleaner and easier to read*/
+.photo-stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
