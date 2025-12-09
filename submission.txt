@@ -1,30 +1,73 @@
 Final Project - Submission Form
+Group 18: Kevin Richard, Benjamin Taylor, Rishi Jinwala, Zack Brokaw, Jordan Wise-Smith
 
-Please fill in this form and submit it with your final project.
-
-Enter the user stories that your team worked on. For each story include the following information:
-
-Story number and name:
-Story points:
-Brief description to see the story in action:
-
-Total Story Points:
-
-Any special instructions for grading (it should be easy for someone to run your
-app from a new machine):
-
-************************************ Example ***********************************
-* As an example: if you did only story 5, your file would look like:
-* 
-* Story number and name:  5 - Activity Feed
-* Story points:  4
+************************************ Group 18 Stories ***********************************
+* Story number and name: 1 – Extend User Profile Detail With Usage
+* Story points: 3
 * Brief description to see the story in action:
-* Push the button labeled Activity on the toolbar to view the 10 most recent
-* activities of the current user.
-* 
-* Total Story Points: 4
-* 
-* Any special instructions for grading (it should be easy for someone to run
+* - Navigate to any user’s detail page (Users → select a user).
+* - The profile displays two usage indicators:
+*     - Most recently uploaded photo (thumbnail + upload date)
+*     - Photo with the most comments (thumbnail + total comment count)
+* - Clicking either thumbnail opens the User Photos view with that exact photo 
+*   selected and all its comments visible.
+*
+* Story number and name: 5 – Deleting Comments, Photos, and Users
+* Story points: 4
+* Brief description to see the story in action:
+* - On the User Photos page:
+*     - A user may delete any photo they own.
+*     - A user may delete any comment they have written, even on photos owned by others.
+* - From the User Detail page:
+*     - A user may delete their entire account (with a required confirmation).
+* - Account deletion removes:
+*     - The User object
+*     - All photos owned by the user (including their image files on disk)
+*     - All comments written by the user anywhere in the system
+*     - The user’s session (automatically logs the user out)
+*
+* Story number and name: 8 – Sidebar List Marks Users With New Activity
+* Story points: 3
+* Brief description to see the story in action:
+* - The sidebar user list shows each user's most recent activity, which may be:
+*     - posted a photo (includes a thumbnail)
+*     - added a comment
+*     - registered
+*     - logged in
+*     - logged out
+* - Each activity shows a timestamp.
+* - The list automatically refreshes every 10 seconds so recent activity appears 
+*   without page reload.
+*
+* Story number and name: 10 – Photo Stepper
+* Story points: 3
+* Brief description to see the story in action:
+* - Navigate to a user’s Photos page.
+* - Only one photo is displayed at a time along with all its comments.
+* - Use the Previous and Next buttons to navigate through the photos.
+*     - Buttons disable when at the first or last photo.
+* - The URL updates to include ?photoId=<id> so that:
+*     - Individual photos are bookmarkable and sharable
+*     - Browser back/forward buttons correctly navigate between photos
+*     - Opening a deep link loads the correct photo and updates the stepper position
+*
+* Story number and name: 13 – Login and Browser Refresh
+* Story points: 3
+* Brief description to see the story in action:
+* - After logging in, a user may refresh the browser and stay logged in, using 
+*   persistent server-side sessions.
+* - On page load, the app calls /session to restore the logged-in user.
+* - Behavior is backward compatible with Mocha tests and does not compromise security.
+*
+* Total Story Points: (3 + 4 + 3 + 3 + 3) = 16
+*
+* Any special instructions for grading (it should be easy for someone to run 
 * your app from a new machine):
-* None
-************************************ Example ***********************************
+* 
+* To run the application on a new machine:
+* - Start MongoDB locally (mongodb://127.0.0.1/project5).
+* - Run:
+*       npm install
+*       npm start
+* - Images are stored in the /images directory and are created automatically on upload.
+************************************ Group 18 Stories ***********************************
