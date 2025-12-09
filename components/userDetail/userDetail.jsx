@@ -113,7 +113,7 @@ class UserDetail extends React.Component {
               {mostRecentPhoto && (
                 <div className="user-usage-card">
                   <div><b>Most recently uploaded photo</b></div>
-                  <Link to={`/photos/${user._id}`}>
+                  <Link to={`/photos/${user._id}?photoId=${mostRecentPhoto._id}`}>
                     <img
                       src={`/images/${mostRecentPhoto.file_name}`}
                       alt="Most recent"
@@ -127,8 +127,7 @@ class UserDetail extends React.Component {
                     />
                   </Link>
                   <div style={{ fontSize: '0.9rem', marginTop: '4px' }}>
-                    Uploaded:{' '}
-                    {new Date(mostRecentPhoto.date_time).toLocaleString()}
+                    Uploaded: {new Date(mostRecentPhoto.date_time).toLocaleString()}
                   </div>
                 </div>
               )}
@@ -136,7 +135,7 @@ class UserDetail extends React.Component {
               {mostCommentedPhoto && (
                 <div className="user-usage-card">
                   <div><b>Photo with most comments</b></div>
-                  <Link to={`/photos/${user._id}`}>
+                  <Link to={`/photos/${user._id}?photoId=${mostCommentedPhoto._id}`}>
                     <img
                       src={`/images/${mostCommentedPhoto.file_name}`}
                       alt="Most commented"
@@ -150,10 +149,7 @@ class UserDetail extends React.Component {
                     />
                   </Link>
                   <div style={{ fontSize: '0.9rem', marginTop: '4px' }}>
-                    Comments:{' '}
-                    {mostCommentedPhoto.comments
-                      ? mostCommentedPhoto.comments.length
-                      : 0}
+                    Comments: {mostCommentedPhoto.comments ? mostCommentedPhoto.comments.length : 0}
                   </div>
                 </div>
               )}
